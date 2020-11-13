@@ -1,0 +1,13 @@
+<svg width="350" height="265" fill="none" xmlns="http://www.w3.org/2000/svg"><style>.header
+{
+    font: 400 11px Sans-Serif;
+    font-size: 20px;
+    fill: #2F80ED;
+}
+
+.language
+{
+    font: 400 11px Sans-Serif;
+    font-size: 11px;
+    fill: #333333;
+}</style><rect x="0.5" y="0.5" rx="5" height="264" width="349" stroke="#E4E2E2" fill="#FFFEFE" stroke-opacity="1"></rect><g transform="translate(25, 35)"><text class="header" x="0" y="0">Most Used Languages</text></g><g transform="translate(25, 65)"><g transform="translate(0, 0)"><text class="language" x="2" y="0">C#</text><rect x="2" y="10" rx="3" ry="3" width="250" height="8" fill="#DDDDDD"></rect><rect x="2" y="10" rx="3" ry="3" width="168.0674409891345" height="8" fill="#178600"></rect><text class="language" x="260" y="15.25" dominant-baseline="middle">67.23%</text></g><g transform="translate(0, 40)"><text class="language" x="2" y="0">C++</text><rect x="2" y="10" rx="3" ry="3" width="250" height="8" fill="#DDDDDD"></rect><rect x="2" y="10" rx="3" ry="3" width="40.456310188044924" height="8" fill="#f34b7d"></rect><text class="language" x="260" y="15.25" dominant-baseline="middle">16.18%</text></g><g transform="translate(0, 80)"><text class="language" x="2" y="0">C</text><rect x="2" y="10" rx="3" ry="3" width="250" height="8" fill="#DDDDDD"></rect><rect x="2" y="10" rx="3" ry="3" width="14.871669721426185" height="8" fill="#555555"></rect><text class="language" x="260" y="15.25" dominant-baseline="middle">5.95%</text></g><g transform="translate(0, 120)"><text class="language" x="2" y="0">ShaderLab</text><rect x="2" y="10" rx="3" ry="3" width="250" height="8" fill="#DDDDDD"></rect><rect x="2" y="10" rx="3" ry="3" width="13.818213117576176" height="8" fill="#CACDD3"></rect><text class="language" x="260" y="15.25" dominant-baseline="middle">5.53%</text></g><g transform="translate(0, 160)"><text class="language" x="2" y="0">Other</text><rect x="2" y="10" rx="3" ry="3" width="250" height="8" fill="#DDDDDD"></rect><rect x="2" y="10" rx="3" ry="3" width="12.78636598381821" height="8" fill="#999999"></rect><text class="language" x="260" y="15.25" dominant-baseline="middle">5.11%</text></g></g></svg>
