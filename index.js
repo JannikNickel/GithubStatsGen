@@ -170,7 +170,7 @@ function GenerateFullLanguageStatsSVG(languageStats)
     }
 
     //Update height
-    var actualHeight = 65 + lCount * languageHeight;
+    var actualHeight = languageOffset + lCount * languageHeight;
     svg.attr("height", actualHeight);
     background.attr("height", actualHeight - 1);
 
@@ -180,13 +180,13 @@ function GenerateFullLanguageStatsSVG(languageStats)
 function GenerateSmallLanguageStatsSVG(languageStats)
 {
     //Settings
-    var width = 350;
+    var width = 530;
     var height = 170;
     var leftIndent = 25;
     var headerOffset = 35;
     var languageLimit = 5;
     var languageOffset = 65;
-    var barHeight = 8;
+    var barHeight = 10;
 
     //Fake DOM
     const dom = new JSDOM("<!DOCTYPE html><body></body>");
@@ -251,13 +251,17 @@ function GenerateSmallLanguageStatsSVG(languageStats)
         var xOffset = i % 2 == 0 ? 0 : (width - leftIndent) * 0.5;
         languageContainer.append("circle").attr("cx", xOffset + 5).attr("cy", tOffset - 4).attr("r", 5).attr("fill", color);
         languageContainer.append("text").attr("class", "language").attr("x", xOffset + 15).attr("y", tOffset).text(lName + " (" + (percentage * 100).toFixed(2) + "%)");
-        tOffset += i % 2 == 0 ? 0 : 20;
+        tOffset += i % 2 == 0 ? 0 : 25;
 
         if(lCount >= languageLimit)
         {
             break;
         }
     }
+
+    var actualHeight = languageOffset + barHeight + tOffset + leftIndent * 0.75;
+    svg.attr("height", actualHeight);
+    background.attr("height", actualHeight - 1);
 
     return body.html();
 }
