@@ -1,5 +1,5 @@
 {
     "owner": "JannikNickel",
-    "summerTimeOffset": 2,
-    "winterTimeOffset": 1
+    "localTimezone": "Europe/Berlin",
+    "serverContentDirectory": "Data/Generated/"
 }

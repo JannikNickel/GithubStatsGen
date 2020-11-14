@@ -6,10 +6,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@octokit/core": "^3.2.1",
     "@octokit/rest": "^18.0.3",
     "d3": "^6.2.0",
-    "dayjs": "^1.9.6",
-    "jsdom": "^16.4.0"
+    "jsdom": "^16.4.0",
+    "ssh2-sftp-client": "^5.3.1"
   }
 }

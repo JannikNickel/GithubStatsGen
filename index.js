@@ -1,15 +1,25 @@
+//Config
 const secrets = require("./secrets.json");
-const { Octokit } = require("@octokit/rest");
-const d3 = require("d3");
-var jsdom = require("jsdom");
-const { JSDOM } = jsdom
-var fs = require('fs');
-const languageColors = require("./languagecolors.json");
 const settings = require("./settings.json");
-const { groups } = require("d3");
-const dayjs = require("dayjs");
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
+
+//References
+const languageColors = require("./languagecolors.json");
+
+//Discord
+const { Octokit } = require("@octokit/rest");
+
+//Visualization
+const d3 = require("d3");
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom
+
+//Std lib
+const fs = require('fs');
+
+//SFTP
+const sftp = require("ssh2-sftp-client");
+const { sum } = require("d3");
+const { group } = require("console");
 
 async function GetLanguageStats(github)
 {
@@ -167,7 +177,7 @@ function GenerateFullLanguageStatsSVG(languageStats)
     return body.html();
 }
 
-function GenerateSmallanguageStatsSVG(languageStats)
+function GenerateSmallLanguageStatsSVG(languageStats)
 {
     //Settings
     var width = 350;
@@ -252,14 +262,69 @@ function GenerateSmallanguageStatsSVG(languageStats)
     return body.html();
 }
 
+function GenerateCommitTimes(groups)
+{
+    //Settings
+    var width = 530;
+    var height = 185;
+    var leftIndent = 25;
+    var rightIndent = 90;
+    var headerOffset = 35;
+    var timeOffset = 70;
+    var barHeight = 12;
+
+    //Fake DOM
+    const dom = new JSDOM("<!DOCTYPE html><body></body>");
+    let body = d3.select(dom.window.document.querySelector("body"));
+
+    //SVG
+    var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
+    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+
+    //Background
+    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+
+    //Header
+    var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
+    g.append("text").attr("class", "header").attr("x", 0).attr("y", 0).text("Commit Times");
+
+    //Times
+    var groupSum = sum(groups);
+    var tOffset = 0;
+    var timeContainer = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + timeOffset + ")");
+    for (let i = 0; i < groups.length; i++)
+    {
+        const group = groups[i];
+        
+        //Offset
+        var tg = timeContainer.append("g").attr("transform", "translate(0, " + tOffset + ")");
+        tOffset += 30;
+
+        //Time
+        var time = i == 0 ? "Morning" : (i == 1 ? "Daytime" : (i == 2 ? "Evening" : "Night"));
+        var emoji = i == 0 ? "🌅" : (i == 1 ? "☀️" : (i == 2 ? "🌇" : "🌙"));
+        tg.append("text").attr("class", "timeText").attr("x", 2).attr("y", 0).text(emoji + " " + time);
+        tg.append("text").attr("class", "timeText").attr("x", 210 - 10).attr("y", 0).attr("text-anchor", "end").text(group + " commits");
+
+        //Fill
+        var leftOffset = 210;
+        var bgWidth = width - leftIndent - leftOffset - rightIndent;
+        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", bgWidth).attr("height", barHeight).attr("fill", "#DDDDDD");
+        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight).attr("fill", "#222222");
+
+        //Percentage
+        tg.append("text").attr("class", "timeText").attr("x", leftOffset + bgWidth + 60).attr("y", 0).attr("text-anchor", "end").text((group / groupSum * 100).toFixed(2) + "%");
+    }
+
+    return body.html();
+}
+
 function ParseDates(strings)
 {
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
     dates = []
     strings.forEach(element =>
     {
-        var date = dayjs(element);
+        var date = new Date(Date.parse(element));
         dates.push(date);
     });
     return dates;
@@ -276,10 +341,17 @@ function GroupDates(dates)
             let time = times[i];
 
             //Shift based on timezone
-            let hour = date.hour();
-            let year = date.year();
-
-            //Endlosschleifen :(
+            let timeString = date.toLocaleTimeString("en-DE", {timeZone: settings.localTimezone, hour12: false});
+            let parts = timeString.split(":");
+            if(parts.length == 0)
+            {
+                continue;
+            }
+            let hour = parseInt(parts[0]);
+            if(isNaN(hour))
+            {
+                continue;
+            }
 
             if(hour % 24 < time)
             {
@@ -288,24 +360,53 @@ function GroupDates(dates)
             }
         }
     });
+    //Shift to have [morning, daytime, evening, night]
+    var temp = timeCounts[0];
+    timeCounts[0] = timeCounts[1];
+    timeCounts[1] = timeCounts[2];
+    timeCounts[2] = timeCounts[3];
+    timeCounts[3] = temp;
+
     return timeCounts;
+}
+
+async function upload()
+{
+    let client = new sftp();
+    client.connect({
+        host: secrets.server_url,
+        port: 22,
+        username: secrets.server_user,
+        password: secrets.server_pw
+    }).then(() => {
+        client.put("languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
+        client.put("languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
+    }).then(() => {
+        console.log("Uploaded data");
+    }).catch((err) => {
+        console.log(err);
+    });
 }
 
 async function main()
 {
     //const github = new Octokit({auth: secrets.githubAPIKey});
-    //data = await GetLanguageStats(github);
+    //var data = await GetLanguageStats(github);
     //fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
 
-    languageStats = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString())
+    var data = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString());
     
-    var dates = ParseDates(languageStats.commitDates);
+    var dates = ParseDates(data.commitDates);
     var groups = GroupDates(dates);
 
-    console.log(groups);
+    var svg = GenerateFullLanguageStatsSVG(data.languages);
+    fs.writeFileSync("languageStats.svg", svg);
+    svg = GenerateSmallLanguageStatsSVG(data.languages);
+    fs.writeFileSync("languageStats_Compact.svg", svg);
+    svg = GenerateCommitTimes(groups);
+    fs.writeFileSync("commitTimes.svg", svg);
 
-    var svg = GenerateFullLanguageStatsSVG(languageStats);
-    fs.writeFileSync("out.svg", svg);
+    //upload();
 }
 
 main();
