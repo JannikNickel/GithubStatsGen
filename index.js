@@ -4,9 +4,12 @@ const d3 = require("d3");
 var jsdom = require("jsdom");
 const { JSDOM } = jsdom
 var fs = require('fs');
-const { sum } = require("d3");
-const { count } = require("console");
 const languageColors = require("./languagecolors.json");
+const settings = require("./settings.json");
+const { groups } = require("d3");
+const dayjs = require("dayjs");
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 
 async function GetLanguageStats(github)
 {
@@ -14,6 +17,7 @@ async function GetLanguageStats(github)
 
     repos = await github.repos.listForAuthenticatedUser();
     languageAmount = {}
+    commitDates = []
     totalBytes = 0
     for(let i = 0;i < repos.data.length;i++)
     {
@@ -24,8 +28,8 @@ async function GetLanguageStats(github)
         }
         if(repo.owner.id == user.data.id)
         {
-            console.log(repo);
-            languages = await github.repos.listLanguages({owner: "JannikNickel", repo: repo.name});
+            //Languages
+            languages = await github.repos.listLanguages({owner: settings.owner, repo: repo.name});
             Object.keys(languages.data).forEach(key =>
             {
                 if(!(key in languageAmount))
@@ -35,6 +39,31 @@ async function GetLanguageStats(github)
                 languageAmount[key] += languages.data[key];
                 totalBytes += languages.data[key];
             });
+
+            //Commits
+            try
+            {
+                var page = 0
+                while(true)
+                {
+                    var commits = await github.request('GET /repos/{owner}/{repo}/commits', {
+                        owner: repo.owner.login,
+                        repo: repo.name,
+                        per_page: 100,
+                        page: page
+                    });
+                    page += 1;
+                    commits.data.forEach(commit =>
+                    {
+                        commitDates.push(commit.commit.committer.date);
+                    });
+                    if(commits.data.length == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch(error) { }
         }
     }
     languagePercentage = []
@@ -45,7 +74,7 @@ async function GetLanguageStats(github)
 
     languagePercentage.sort((a, b) => a.percentage < b.percentage ? 1 : -1);
 
-    return languagePercentage;
+    return {"languages": languagePercentage, "commitDates": commitDates};
 }
 
 function GenerateFullLanguageStatsSVG(languageStats)
@@ -223,19 +252,60 @@ function GenerateSmallanguageStatsSVG(languageStats)
     return body.html();
 }
 
+function ParseDates(strings)
+{
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+    dates = []
+    strings.forEach(element =>
+    {
+        var date = dayjs(element);
+        dates.push(date);
+    });
+    return dates;
+}
+
+function GroupDates(dates)
+{
+    var times = [6, 12, 18, 24]
+    var timeCounts = [0, 0, 0, 0]
+    dates.forEach(date =>
+    {
+        for (let i = 0; i < times.length; i++)
+        {
+            let time = times[i];
+
+            //Shift based on timezone
+            let hour = date.hour();
+            let year = date.year();
+
+            //Endlosschleifen :(
+
+            if(hour % 24 < time)
+            {
+                timeCounts[i] += 1;
+                break;
+            }
+        }
+    });
+    return timeCounts;
+}
+
 async function main()
 {
     //const github = new Octokit({auth: secrets.githubAPIKey});
-    //languageStats = await GetLanguageStats(github);
-    //fs.writeFileSync("test.json", JSON.stringify(languageStats, null, 2), function(err){});
+    //data = await GetLanguageStats(github);
+    //fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
 
-    languageStats = JSON.parse(fs.readFileSync("test.json", function(err){}).toString())
+    languageStats = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString())
+    
+    var dates = ParseDates(languageStats.commitDates);
+    var groups = GroupDates(dates);
+
+    console.log(groups);
 
     var svg = GenerateFullLanguageStatsSVG(languageStats);
     fs.writeFileSync("out.svg", svg);
-
-    //console.log(languageStats);
-    console.log(svg);
 }
 
 main();
