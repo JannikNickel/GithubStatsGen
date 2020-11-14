@@ -290,7 +290,8 @@ function GenerateCommitTimes(groups)
 
     //Header
     var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
-    g.append("text").attr("class", "header").attr("x", 0).attr("y", 0).text("Commit Times");
+    let header = "I'm a" + (groups.indexOf(Math.max(...groups)) <= 1 ? "n early 🐦" : " night 🦉");//"Commit Times";
+    g.append("text").attr("class", "header").attr("x", 0).attr("y", 0).text(header);
 
     //Times
     var groupSum = sum(groups);
@@ -321,6 +322,68 @@ function GenerateCommitTimes(groups)
     }
 
     return body.html();
+}
+
+function GenerateCommitDays(groups)
+{
+    //Settings
+    var width = 530;
+    var height = 275;
+    var leftIndent = 25;
+    var rightIndent = 90;
+    var headerOffset = 35;
+    var timeOffset = 70;
+    var barHeight = 12;
+
+    //Fake DOM
+    const dom = new JSDOM("<!DOCTYPE html><body></body>");
+    let body = d3.select(dom.window.document.querySelector("body"));
+
+    //SVG
+    var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
+    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+
+    //Background
+    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+
+    //Header
+    var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
+    let header = "📅 I'm most productive on " + getWeekDay(groups.indexOf(Math.max(...groups)));//"Commit Days";
+    g.append("text").attr("class", "header").attr("x", 0).attr("y", 0).text(header);
+
+    //Times
+    var groupSum = sum(groups);
+    var tOffset = 0;
+    var timeContainer = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + timeOffset + ")");
+    for (let i = 0; i < groups.length; i++)
+    {
+        const group = groups[i];
+        
+        //Offset
+        var tg = timeContainer.append("g").attr("transform", "translate(0, " + tOffset + ")");
+        tOffset += 30;
+
+        //Time
+        var time = getWeekDay(i);
+        tg.append("text").attr("class", "timeText").attr("x", 2).attr("y", 0).text(time);
+        tg.append("text").attr("class", "timeText").attr("x", 210 - 10).attr("y", 0).attr("text-anchor", "end").text(group + " commits");
+
+        //Fill
+        var leftOffset = 210;
+        var bgWidth = width - leftIndent - leftOffset - rightIndent;
+        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", bgWidth).attr("height", barHeight).attr("fill", "#DDDDDD");
+        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight).attr("fill", "#222222");
+
+        //Percentage
+        tg.append("text").attr("class", "timeText").attr("x", leftOffset + bgWidth + 60).attr("y", 0).attr("text-anchor", "end").text((group / groupSum * 100).toFixed(2) + "%");
+    }
+
+    return body.html();
+}
+
+function getWeekDay(i)
+{
+    return i == 0 ? "Monday" : (i == 1 ? "Tuesday" : (i == 2 ? "Wednesday" : (i == 3 ? "Thursday" : (i == 4 ? "Friday" : (i == 5 ? "Saturday" : "Sunday")))));
 }
 
 function ParseDates(strings)
@@ -374,6 +437,23 @@ function GroupDates(dates)
     return timeCounts;
 }
 
+function GroupDateDays(dates)
+{
+    var dateNumberMap = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6 };
+    var dayCounts = [0, 0, 0, 0, 0, 0, 0]
+    dates.forEach(date =>
+    {
+        let dateString = date.toLocaleDateString("en-US", {timeZone: settings.localTimezone, weekday: "short"});
+        if(dateString in dateNumberMap)
+        {
+            let day = dateNumberMap[dateString];
+            dayCounts[day] += 1;
+        }
+    });
+
+    return dayCounts;
+}
+
 async function upload()
 {
     let client = new sftp();
@@ -385,6 +465,8 @@ async function upload()
     }).then(() => {
         client.put("languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
         client.put("languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
+        client.put("commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
+        client.put("commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
     }).then(() => {
         console.log("Uploaded data");
     }).catch((err) => {
@@ -402,6 +484,7 @@ async function main()
     
     var dates = ParseDates(data.commitDates);
     var groups = GroupDates(dates);
+    var dayGroups = GroupDateDays(dates);
 
     var svg = GenerateFullLanguageStatsSVG(data.languages);
     fs.writeFileSync("languageStats.svg", svg);
@@ -409,6 +492,8 @@ async function main()
     fs.writeFileSync("languageStats_Compact.svg", svg);
     svg = GenerateCommitTimes(groups);
     fs.writeFileSync("commitTimes.svg", svg);
+    svg = GenerateCommitDays(dayGroups);
+    fs.writeFileSync("commitDays.svg", svg);
 
     //upload();
 }

@@ -5,6 +5,13 @@
     fill: #2F80ED;
 }
 
+.headerSmall
+{
+    font: 400 18px Sans-Serif;
+    font-size: 18px;
+    fill: #2F80ED;
+}
+
 .language
 {
     font: 400 14px Sans-Serif;

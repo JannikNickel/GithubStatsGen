@@ -14,3 +14,9 @@ Generate SVG cards for GitHub statistics about a user.
 
 **Commit times**
 
+![](http://data.jnigames.com/Generated/commitTimes.svg)
+
+**Commit days**
+
+![](http://data.jnigames.com/Generated/commitDays.svg)
+
