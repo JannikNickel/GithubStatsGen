@@ -19,7 +19,6 @@ const fs = require('fs');
 //SFTP
 const sftp = require("ssh2-sftp-client");
 const { sum } = require("d3");
-const { group } = require("console");
 
 async function GetLanguageStats(github)
 {
@@ -454,7 +453,7 @@ function GroupDateDays(dates)
     return dayCounts;
 }
 
-async function upload()
+function upload()
 {
     let client = new sftp();
     client.connect({
@@ -463,14 +462,16 @@ async function upload()
         username: secrets.server_user,
         password: secrets.server_pw
     }).then(() => {
-        client.put("languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
-        client.put("languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
-        client.put("commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
-        client.put("commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
+        client.put("output/languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
+        client.put("output/languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
+        client.put("output/commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
+        client.put("output/commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
     }).then(() => {
         console.log("Uploaded data");
+        client.end();
     }).catch((err) => {
         console.log(err);
+        client.end();
     });
 }
 
@@ -487,17 +488,20 @@ async function main()
     var dayGroups = GroupDateDays(dates);
 
     var svg = GenerateFullLanguageStatsSVG(data.languages);
-    fs.writeFileSync("languageStats.svg", svg);
+    fs.writeFileSync("output/languageStats.svg", svg);
     svg = GenerateSmallLanguageStatsSVG(data.languages);
-    fs.writeFileSync("languageStats_Compact.svg", svg);
+    fs.writeFileSync("output/languageStats_Compact.svg", svg);
     svg = GenerateCommitTimes(groups);
-    fs.writeFileSync("commitTimes.svg", svg);
+    fs.writeFileSync("output/commitTimes.svg", svg);
     svg = GenerateCommitDays(dayGroups);
-    fs.writeFileSync("commitDays.svg", svg);
+    fs.writeFileSync("output/commitDays.svg", svg);
 
-    //upload();
+    upload();
 }
 
 main();
 
-//TODO commit times
+//TODO setting and regular updates
+//TODO separate file for visualization
+//TODO no magic color version in the SVGs (use css)
+//TODO adjustable width, dark mode in visualization function
