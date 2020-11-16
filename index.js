@@ -19,6 +19,7 @@ const fs = require('fs');
 //SFTP
 const sftp = require("ssh2-sftp-client");
 const { sum } = require("d3");
+const { resolve } = require("path");
 
 async function GetLanguageStats(github)
 {
@@ -453,40 +454,43 @@ function GroupDateDays(dates)
     return dayCounts;
 }
 
-function upload()
+async function upload()
 {
-    let client = new sftp();
-    client.connect({
-        host: secrets.server_url,
-        port: 22,
-        username: secrets.server_user,
-        password: secrets.server_pw
-    }).then(() => {
-        client.put("output/languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
-        client.put("output/languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
-        client.put("output/commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
-        client.put("output/commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
-    }).then(() => {
+    try{
+        let client = new sftp();
+        await client.connect({
+            host: secrets.server_url,
+            port: 22,
+            username: secrets.server_user,
+            password: secrets.server_pw
+        });
+        await client.put("output/languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
+        await client.put("output/languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
+        await client.put("output/commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
+        await client.put("output/commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
+        await client.end();
         console.log("Uploaded data");
-        client.end();
-    }).catch((err) => {
-        console.log(err);
-        client.end();
-    });
+    }
+    catch(err)
+    {
+        console.log("Error while uploading data " + err);
+    }
 }
 
-async function main()
+async function update()
 {
-    //const github = new Octokit({auth: secrets.githubAPIKey});
-    //var data = await GetLanguageStats(github);
-    //fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
+    console.log("Requesting data");
+    const github = new Octokit({auth: secrets.githubAPIKey});
+    var data = await GetLanguageStats(github);
+    fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
+    //var data = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString());
 
-    var data = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString());
-    
+    console.log("Transforming data");
     var dates = ParseDates(data.commitDates);
     var groups = GroupDates(dates);
     var dayGroups = GroupDateDays(dates);
 
+    console.log("Generating SVGs");
     var svg = GenerateFullLanguageStatsSVG(data.languages);
     fs.writeFileSync("output/languageStats.svg", svg);
     svg = GenerateSmallLanguageStatsSVG(data.languages);
@@ -496,12 +500,26 @@ async function main()
     svg = GenerateCommitDays(dayGroups);
     fs.writeFileSync("output/commitDays.svg", svg);
 
+    console.log("Uploading data");
     upload();
+}
+
+async function delay(milliseconds)
+{
+    return await new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function main()
+{
+    while(true)
+    {
+        await update();
+        await delay(settings.updateInterval * 1000);
+    }
 }
 
 main();
 
-//TODO setting and regular updates
 //TODO separate file for visualization
 //TODO no magic color version in the SVGs (use css)
 //TODO adjustable width, dark mode in visualization function
