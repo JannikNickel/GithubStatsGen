@@ -87,7 +87,7 @@ async function GetLanguageStats(github)
     return {"languages": languagePercentage, "commitDates": commitDates};
 }
 
-function GenerateFullLanguageStatsSVG(languageStats)
+function GenerateFullLanguageStatsSVG(languageStats, dark = false)
 {
     //Settings
     var width = 350;
@@ -105,10 +105,10 @@ function GenerateFullLanguageStatsSVG(languageStats)
 
     //SVG
     var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
-    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+    svg.append("style").text(fs.readFileSync("styles" + (dark == true ? "_dark" : "") + ".css", function(err){}).toString());
 
     //Background
-    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+    var background = svg.append("rect").attr("class", "backgroundContainer").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke-opacity", 1);
 
     //Header
     var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
@@ -177,7 +177,7 @@ function GenerateFullLanguageStatsSVG(languageStats)
     return body.html();
 }
 
-function GenerateSmallLanguageStatsSVG(languageStats)
+function GenerateSmallLanguageStatsSVG(languageStats, dark = false)
 {
     //Settings
     var width = 530;
@@ -194,10 +194,10 @@ function GenerateSmallLanguageStatsSVG(languageStats)
 
     //SVG
     var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
-    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+    svg.append("style").text(fs.readFileSync("styles" + (dark == true ? "_dark" : "") + ".css", function(err){}).toString());
 
     //Background
-    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+    var background = svg.append("rect").attr("class", "backgroundContainer").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke-opacity", 1);
 
     //Header
     var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
@@ -266,7 +266,7 @@ function GenerateSmallLanguageStatsSVG(languageStats)
     return body.html();
 }
 
-function GenerateCommitTimes(groups)
+function GenerateCommitTimes(groups, dark = false)
 {
     //Settings
     var width = 530;
@@ -283,10 +283,10 @@ function GenerateCommitTimes(groups)
 
     //SVG
     var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
-    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+    svg.append("style").text(fs.readFileSync("styles" + (dark == true ? "_dark" : "") + ".css", function(err){}).toString());
 
     //Background
-    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+    var background = svg.append("rect").attr("class", "backgroundContainer").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke-opacity", 1);
 
     //Header
     var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
@@ -315,7 +315,7 @@ function GenerateCommitTimes(groups)
         var leftOffset = 210;
         var bgWidth = width - leftIndent - leftOffset - rightIndent;
         tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", bgWidth).attr("height", barHeight).attr("fill", "#DDDDDD");
-        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight).attr("fill", "#222222");
+        tg.append("rect").attr("class", "timeBarFill").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight);
 
         //Percentage
         tg.append("text").attr("class", "timeText").attr("x", leftOffset + bgWidth + 60).attr("y", 0).attr("text-anchor", "end").text((group / groupSum * 100).toFixed(2) + "%");
@@ -324,7 +324,7 @@ function GenerateCommitTimes(groups)
     return body.html();
 }
 
-function GenerateCommitDays(groups)
+function GenerateCommitDays(groups, dark = false)
 {
     //Settings
     var width = 530;
@@ -341,10 +341,10 @@ function GenerateCommitDays(groups)
 
     //SVG
     var svg = body.append("svg").attr("width", width).attr("height", height).attr("fill", "none").attr("xmlns", "http://www.w3.org/2000/svg");
-    svg.append("style").text(fs.readFileSync("styles.css", function(err){}).toString());
+    svg.append("style").text(fs.readFileSync("styles" + (dark == true ? "_dark" : "") + ".css", function(err){}).toString());
 
     //Background
-    var background = svg.append("rect").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke", "#E4E2E2").attr("fill", "#FFFEFE").attr("stroke-opacity", 1);
+    var background = svg.append("rect").attr("class", "backgroundContainer").attr("x", 0.5).attr("y", 0.5).attr("rx", 5).attr("height", height - 1).attr("width", width - 1).attr("stroke-opacity", 1);
 
     //Header
     var g = svg.append("g").attr("transform", "translate(" + leftIndent + ", " + headerOffset + ")");
@@ -372,7 +372,7 @@ function GenerateCommitDays(groups)
         var leftOffset = 210;
         var bgWidth = width - leftIndent - leftOffset - rightIndent;
         tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", bgWidth).attr("height", barHeight).attr("fill", "#DDDDDD");
-        tg.append("rect").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight).attr("fill", "#222222");
+        tg.append("rect").attr("class", "timeBarFill").attr("x", leftOffset).attr("y", -10).attr("rx", 3).attr("ry", 3).attr("width", group / groupSum * bgWidth).attr("height", barHeight);
 
         //Percentage
         tg.append("text").attr("class", "timeText").attr("x", leftOffset + bgWidth + 60).attr("y", 0).attr("text-anchor", "end").text((group / groupSum * 100).toFixed(2) + "%");
@@ -465,9 +465,13 @@ async function upload()
             password: secrets.server_pw
         });
         await client.put("output/languageStats.svg", settings.serverContentDirectory + "languageStats.svg");
+        await client.put("output/languageStats_Dark.svg", settings.serverContentDirectory + "languageStats_Dark.svg");
         await client.put("output/languageStats_Compact.svg", settings.serverContentDirectory + "languageStats_Compact.svg");
+        await client.put("output/languageStats_Compact_Dark.svg", settings.serverContentDirectory + "languageStats_Compact_Dark.svg");
         await client.put("output/commitTimes.svg", settings.serverContentDirectory + "commitTimes.svg");
+        await client.put("output/commitTimes_Dark.svg", settings.serverContentDirectory + "commitTimes_Dark.svg");
         await client.put("output/commitDays.svg", settings.serverContentDirectory + "commitDays.svg");
+        await client.put("output/commitDays_Dark.svg", settings.serverContentDirectory + "commitDays_Dark.svg");
         await client.end();
         console.log("Uploaded data");
     }
@@ -482,7 +486,7 @@ async function update()
     console.log("Requesting data");
     const github = new Octokit({auth: secrets.githubAPIKey});
     var data = await GetLanguageStats(github);
-    fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
+    //fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
     //var data = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString());
 
     console.log("Transforming data");
@@ -493,12 +497,20 @@ async function update()
     console.log("Generating SVGs");
     var svg = GenerateFullLanguageStatsSVG(data.languages);
     fs.writeFileSync("output/languageStats.svg", svg);
+    svg = GenerateFullLanguageStatsSVG(data.languages, true);
+    fs.writeFileSync("output/languageStats_Dark.svg", svg);
     svg = GenerateSmallLanguageStatsSVG(data.languages);
     fs.writeFileSync("output/languageStats_Compact.svg", svg);
+    svg = GenerateSmallLanguageStatsSVG(data.languages, true);
+    fs.writeFileSync("output/languageStats_Compact_Dark.svg", svg);
     svg = GenerateCommitTimes(groups);
     fs.writeFileSync("output/commitTimes.svg", svg);
+    svg = GenerateCommitTimes(groups, true);
+    fs.writeFileSync("output/commitTimes_Dark.svg", svg);
     svg = GenerateCommitDays(dayGroups);
     fs.writeFileSync("output/commitDays.svg", svg);
+    svg = GenerateCommitDays(dayGroups, true);
+    fs.writeFileSync("output/commitDays_Dark.svg", svg);
 
     console.log("Uploading data");
     upload();
