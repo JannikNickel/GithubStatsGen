@@ -19,7 +19,6 @@ const fs = require('fs');
 //SFTP
 const sftp = require("ssh2-sftp-client");
 const { sum } = require("d3");
-const { resolve } = require("path");
 
 async function GetLanguageStats(github)
 {
@@ -28,6 +27,7 @@ async function GetLanguageStats(github)
     repos = await github.repos.listForAuthenticatedUser();
     languageAmount = {}
     commitDates = []
+    allCommits = []
     totalBytes = 0
     for(let i = 0;i < repos.data.length;i++)
     {
@@ -39,16 +39,19 @@ async function GetLanguageStats(github)
         if(repo.owner.id == user.data.id)
         {
             //Languages
-            languages = await github.repos.listLanguages({owner: settings.owner, repo: repo.name});
-            Object.keys(languages.data).forEach(key =>
+            if(settings.languageExcludedRepos.includes(repo.name) == false)
             {
-                if(!(key in languageAmount))
+                languages = await github.repos.listLanguages({owner: settings.owner, repo: repo.name});
+                Object.keys(languages.data).forEach(key =>
                 {
-                    languageAmount[key] = 0;
-                }
-                languageAmount[key] += languages.data[key];
-                totalBytes += languages.data[key];
-            });
+                    if(!(key in languageAmount))
+                    {
+                        languageAmount[key] = 0;
+                    }
+                    languageAmount[key] += languages.data[key];
+                    totalBytes += languages.data[key];
+                });
+            }
 
             //Commits
             try
@@ -65,6 +68,7 @@ async function GetLanguageStats(github)
                     page += 1;
                     commits.data.forEach(commit =>
                     {
+                        allCommits.push(commit);
                         commitDates.push(commit.commit.committer.date);
                     });
                     if(commits.data.length == 0)
@@ -84,7 +88,7 @@ async function GetLanguageStats(github)
 
     languagePercentage.sort((a, b) => a.percentage < b.percentage ? 1 : -1);
 
-    return {"languages": languagePercentage, "commitDates": commitDates};
+    return {"languages": languagePercentage, "commitDates": commitDates, "commits": allCommits};
 }
 
 function GenerateFullLanguageStatsSVG(languageStats, dark = false)
@@ -96,7 +100,6 @@ function GenerateFullLanguageStatsSVG(languageStats, dark = false)
     var headerOffset = 35;
     var languageOffset = 65;
     var languageHeight = 40;
-    var languageLimit = 5;
     var barHeight = 8;
 
     //Fake DOM
@@ -141,7 +144,7 @@ function GenerateFullLanguageStatsSVG(languageStats, dark = false)
         var lName = entry.language;
         var percentage = entry.percentage;
         lCount++;
-        if(lCount >= languageLimit)
+        if(lCount >= settings.languageLimit)
         {
             color = "#999999";
             lName = "Other";
@@ -163,7 +166,7 @@ function GenerateFullLanguageStatsSVG(languageStats, dark = false)
         //Percentage
         lg.append("text").attr("class", "language").attr("x", 2 + width - 75 - leftIndent + 8).attr("y", 10 + 5.25).attr("dominant-baseline", "middle").text((percentage * 100).toFixed(2) + "%");
 
-        if(lCount >= languageLimit)
+        if(lCount >= settings.languageLimit)
         {
             break;
         }
@@ -184,7 +187,6 @@ function GenerateSmallLanguageStatsSVG(languageStats, dark = false)
     var height = 170;
     var leftIndent = 25;
     var headerOffset = 35;
-    var languageLimit = 5;
     var languageOffset = 65;
     var barHeight = 10;
 
@@ -231,7 +233,7 @@ function GenerateSmallLanguageStatsSVG(languageStats, dark = false)
         var lName = entry.language;
         var percentage = entry.percentage;
         lCount++;
-        if(lCount >= languageLimit)
+        if(lCount >= settings.languageLimit)
         {
             color = "#999999";
             lName = "Other";
@@ -253,7 +255,7 @@ function GenerateSmallLanguageStatsSVG(languageStats, dark = false)
         languageContainer.append("text").attr("class", "language").attr("x", xOffset + 15).attr("y", tOffset).text(lName + " (" + (percentage * 100).toFixed(2) + "%)");
         tOffset += i % 2 == 0 ? 0 : 25;
 
-        if(lCount >= languageLimit)
+        if(lCount >= settings.languageLimit)
         {
             break;
         }
@@ -486,7 +488,7 @@ async function update()
     console.log("Requesting data");
     const github = new Octokit({auth: secrets.githubAPIKey});
     var data = await GetLanguageStats(github);
-    //fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
+    fs.writeFileSync("tempData.json", JSON.stringify(data, null, 2), function(err){});
     //var data = JSON.parse(fs.readFileSync("tempData.json", function(err){}).toString());
 
     console.log("Transforming data");
