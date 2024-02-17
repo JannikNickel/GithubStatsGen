@@ -1,8 +1,0 @@
-{
-    "owner": "JannikNickel",
-    "localTimezone": "Europe/Berlin",
-    "serverContentDirectory": "Data/Generated/",
-    "updateInterval": 86400,
-    "languageExcludedRepos": ["JNIGames_Website", "JNIGames_Homepage", "Blockchain"],
-    "languageLimit": 7
-}
