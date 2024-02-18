@@ -1,0 +1,19 @@
+.background {
+    stroke: #636363;
+    fill: #151A1E;
+}
+
+.header {
+    font: 400 20px Sans-Serif;
+    font-size: 20px;
+    fill: #E9E9E9;
+}
+
+.label {
+    font: 400 13px Lucida Console, Monospace;
+    font-size: 13px;
+    fill: #CCCCCC;
+}
+
+.progress-bar-bg { fill: #DDDDDD; }
+.progress-bar-fill { fill: #818181; }

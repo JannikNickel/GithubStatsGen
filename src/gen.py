@@ -5,6 +5,9 @@ from datetime import datetime
 import commit_stats
 
 CACHE_FILE = "cache.json"
+THEME_FILES = {
+    "dark": "theme_dark.css"
+}
 
 inp_username = os.environ.get("INPUT_USERNAME")
 inp_output_file = os.environ.get("INPUT_OUTPUT_FILE")
@@ -66,16 +69,22 @@ else:
         f.write(data.to_json())
 
 
-def gen_svg(type):
+def gen_svg(type: str, theme_css: str):
     match type:
         case "commit_times":
-            return commit_stats.gen_time_card(data, inp_timezone)
+            return commit_stats.gen_time_card(data, inp_timezone, theme_css)
         case "commit_days":
-            return commit_stats.gen_day_card(data, inp_timezone)
+            return commit_stats.gen_day_card(data, inp_timezone, theme_css)
         case _:
             return None
         
-svg = gen_svg(inp_type)
-with open(inp_output_file, "w") as f:
+def read_theme_css(theme: str) -> str:
+    # TODO put these into a res/ folder or something similar
+    with open(f"src/{THEME_FILES[theme]}", "r") as f:
+        return f.read()
+
+css = read_theme_css(inp_theme)
+svg = gen_svg(inp_type, css)
+with open(inp_output_file, "w", encoding = "utf8") as f:
     svg.as_svg(f, header = "")
 exit()
