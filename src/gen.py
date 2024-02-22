@@ -2,7 +2,11 @@ import os
 from data import *
 from github import GithubRest
 from datetime import datetime
+import json
 import commit_stats
+import language_stats
+import io
+import html
 
 CACHE_FILE = "cache.json"
 THEME_FILES = {
@@ -70,21 +74,28 @@ else:
 
 
 def gen_svg(type: str, theme_css: str):
+    with open("res/lang_colors.json", "r") as file:
+        lang_colors = json.load(file)
     match type:
         case "commit_times":
             return commit_stats.gen_time_card(data, inp_timezone, theme_css)
         case "commit_days":
             return commit_stats.gen_day_card(data, inp_timezone, theme_css)
+        case "lang_list":
+            return language_stats.gen_lang_card(data, theme_css, lang_colors, inp_language_limit, False)
+        case "lang_comp":
+            return language_stats.gen_lang_card(data, theme_css, lang_colors, inp_language_limit, True)
         case _:
             return None
         
 def read_theme_css(theme: str) -> str:
-    # TODO put these into a res/ folder or something similar
-    with open(f"src/{THEME_FILES[theme]}", "r") as f:
+    with open(f"res/{THEME_FILES[theme]}", "r") as f:
         return f.read()
 
 css = read_theme_css(inp_theme)
 svg = gen_svg(inp_type, css)
-with open(inp_output_file, "w", encoding = "utf8") as f:
-    svg.as_svg(f, header = "")
+with io.StringIO() as outStr:
+    svg.as_svg(outStr, header = "")
+    with open(inp_output_file, "w", encoding = "utf8") as f:
+        f.write(html.unescape(outStr.getvalue()))
 exit()

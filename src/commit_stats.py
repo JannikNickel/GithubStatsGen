@@ -97,7 +97,7 @@ def draw_svg(title: str, rows: list[tuple[str, int]], layout: CommitStatsLayout,
             text_anchor = "end",
             class_ = "label"))
 
-        bg_width = layout.width - layout.left_margin - layout.bar_left_offset - layout.right_margin - layout.bar_perc_left_offset        
+        bg_width = layout.width - layout.left_margin - layout.bar_left_offset - layout.right_margin - layout.bar_perc_left_offset
         row_group.append(draw.Rectangle(
             x = layout.bar_left_offset,
             y = -10,

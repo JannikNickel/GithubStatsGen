@@ -15,5 +15,12 @@
     fill: #CCCCCC;
 }
 
+.language-label
+{
+    font: 400 14px Sans-Serif;
+    font-size: 14px;
+    fill: #CCCCCC;
+}
+
 .progress-bar-bg { fill: #DDDDDD; }
 .progress-bar-fill { fill: #818181; }
