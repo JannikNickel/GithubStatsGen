@@ -92,6 +92,9 @@ css = read_theme_css(inp_theme)
 svg = gen_svg(inp_type, css)
 with io.StringIO() as outStr:
     svg.as_svg(outStr, header = "")
+    out_dir = os.path.dirname(inp_output_file)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok = True)
     with open(inp_output_file, "w", encoding = "utf8") as f:
         f.write(html.unescape(outStr.getvalue()))
 exit()
