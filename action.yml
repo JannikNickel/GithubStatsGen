@@ -1,0 +1,69 @@
+name: "Github Stats Gen"
+description: "Generates SVG cards for your github stats"
+
+inputs:
+  username:
+    description: "Github username of the user to generate stats for"
+    required: true
+  output_file:
+    description: "Output file path/name relative to the root of the repository"
+    required: true
+  type:
+    description: "Type of card to generate (commit_times, commit_days, lang_list, lang_comp)"
+    required: true
+  theme:
+    description: "Theme to use (dark, light)"
+    default: "dark"
+    required: false
+  include_forks:
+    description: "Whether to include forked repositories or not"
+    required: false
+    default: false
+  include_private:
+    description: "Whether to include private repositories or not. An access token is required to access private repos!"
+    required: false
+    default: false
+  ignored_repos:
+    description: "List of comma separated repository names to ignore in the statistics"
+    required: false
+    default: ""
+  timezone:
+    description: "Local timezone of the user from the tz database"
+    required: false
+    default: "Etc/UTC"
+  language_limit:
+    description: "The maximum amount of languages to show in the language cards"
+    required: false
+    default: 7
+  access_token:
+    description: "Github access token to use"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: "pip"
+    
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+
+    - name: Generate Card
+      env:
+        INPUT_USERNAME: ${{ inputs.USERNAME }}
+        INPUT_OUTPUT_FILE: ${{ inputs.OUTPUT_FILE }}
+        INPUT_TYPE: ${{ inputs.TYPE }}
+        INPUT_THEME: ${{ inputs.THEME }}
+        INPUT_INCLUDE_FORKS: ${{ inputs.INCLUDE_FORKS }}
+        INPUT_INCLUDE_PRIVATE: ${{ inputs.INCLUDE_PRIVATE }}
+        INPUT_IGNORED_REPOS: ${{ inputs.IGNORED_REPOS }}
+        INPUT_LANGUAGE_LIMIT: ${{ inputs.LANGUAGE_LIMIT }}
+        INPUT_TIMEZONE: ${{ inputs.TIMEZONE }}
+        ACCESS_TOKEN: ${{ inputs.ACCESS_TOKEN }}
+      run: python ./src/gen.py
+      shell: bash

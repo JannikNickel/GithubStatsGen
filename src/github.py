@@ -45,4 +45,3 @@ class GithubRest:
     def commits(self, owner: str, repo: str) -> list[dict[str, Any]]:
         path = f"/repos/{owner}/{repo}/commits"
         return self.get_all_pages(path)
-
