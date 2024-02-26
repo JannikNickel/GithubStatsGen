@@ -72,3 +72,7 @@ runs:
         ACCESS_TOKEN: ${{ inputs.ACCESS_TOKEN }}
       run: python ./GithubStatsGen/src/gen.py
       shell: bash
+
+    - name: Cleanup
+      run: rm -rf ./GithubStatsGen
+      shell: bash
