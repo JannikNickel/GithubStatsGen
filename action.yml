@@ -45,15 +45,17 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        repository: "JannikNickel/GithubStatsGen"
+        path: "./GithubStatsGen"
 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-        cache: "pip"
     
     - name: Install Dependencies
-      run: pip install -r requirements.txt
+      run: pip install -r ./GithubStatsGen/requirements.txt
       shell: bash
 
     - name: Generate Card
@@ -68,5 +70,5 @@ runs:
         INPUT_LANGUAGE_LIMIT: ${{ inputs.LANGUAGE_LIMIT }}
         INPUT_TIMEZONE: ${{ inputs.TIMEZONE }}
         ACCESS_TOKEN: ${{ inputs.ACCESS_TOKEN }}
-      run: python ./src/gen.py
+      run: python ./GithubStatsGen/src/gen.py
       shell: bash

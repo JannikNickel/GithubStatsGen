@@ -8,6 +8,7 @@ import json
 import io
 import html
 
+BASE_PATH = f"{os.path.dirname(__file__)}/../"
 THEME_FILES = {
     "dark": "theme_dark.css",
     "light": "theme_light.css"
@@ -70,7 +71,7 @@ for i, repo in enumerate(user_repos):
 data = UserData(user_name, user_id, repos)
 
 def gen_svg(type: str, theme_css: str):
-    with open("res/lang_colors.json", "r") as file:
+    with open(f"{BASE_PATH}res/lang_colors.json", "r") as file:
         lang_colors = json.load(file)
     match type:
         case "commit_times":
@@ -85,7 +86,7 @@ def gen_svg(type: str, theme_css: str):
             return None
         
 def read_theme_css(theme: str) -> str:
-    with open(f"res/{THEME_FILES[theme]}", "r") as f:
+    with open(f"{BASE_PATH}res/{THEME_FILES[theme]}", "r") as f:
         return f.read()
 
 css = read_theme_css(inp_theme)
